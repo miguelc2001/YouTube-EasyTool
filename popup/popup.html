@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube EasyTool</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="24" height="24" rx="5" fill="#FF0000"/>
+        <path d="M9.5 7.5L16.5 12L9.5 16.5V7.5Z" fill="white"/>
+      </svg>
+      <span class="brand-name">YouTube EasyTool</span>
+    </div>
+  </header>
+
+  <main class="features">
+
+    <section class="feature-group">
+      <div class="feature-row">
+        <div class="feature-info">
+          <span class="feature-label">Custom Layout</span>
+        </div>
+        <label class="toggle" aria-label="Enable grid layout customization">
+          <input type="checkbox" id="grid-toggle">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="slider-section" id="slider-section">
+        <div class="slider-header">
+          <span class="feature-label">Videos per row</span>
+          <span class="slider-value" id="column-value">4</span>
+        </div>
+        <input
+          type="range"
+          id="column-slider"
+          min="2"
+          max="8"
+          step="1"
+          value="4"
+          aria-label="Number of videos per row"
+        >
+        <div class="slider-bounds">
+          <span>2</span>
+          <span>8</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <section class="feature-group">
+      <div class="feature-row">
+        <div class="feature-info">
+          <span class="feature-label">Hide Shorts</span>
+          <span class="feature-desc">Remove Shorts from feeds and search</span>
+        </div>
+        <label class="toggle" aria-label="Hide YouTube Shorts">
+          <input type="checkbox" id="shorts-toggle">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-info">
+          <span class="feature-label">Original Titles</span>
+          <span class="feature-desc">Prevent YouTube from translating video titles</span>
+        </div>
+        <label class="toggle" aria-label="Show original video titles">
+          <input type="checkbox" id="titles-toggle">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="version">v1.0.0</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
