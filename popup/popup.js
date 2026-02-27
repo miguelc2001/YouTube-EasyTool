@@ -1,5 +1,13 @@
 // YouTube EasyTool — Popup Script
 
+// Scale the popup proportionally to the physical screen size so it feels
+// the same on every monitor (1080p → 1×, 1440p → 1.15×, 4K → 1.33×).
+(function scaleToMonitor() {
+  const physW = window.screen.width * (window.devicePixelRatio || 1);
+  const scale = physW >= 3840 ? 1.33 : physW >= 2560 ? 1.15 : 1;
+  if (scale > 1) document.documentElement.style.zoom = String(scale);
+}());
+
 const STORAGE_KEY = 'settings';
 
 const DEFAULT_SETTINGS = {
