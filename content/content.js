@@ -117,6 +117,43 @@ if (window !== window.top) {
     });
   }
 
+  // ─── Sidebar thumbnail size feature ───────────────────────────────────────
+
+  const THUMBNAIL_STYLE_ID = 'easytool-sidebar-thumbnails';
+
+  // YouTube sets the thumbnail link (a.yt-lockup-view-model__content-image)
+  // to width: 65% of its parent by default (inline style). We scale that
+  // percentage proportionally using !important to override the inline style.
+  function getSidebarThumbnailCSS(size) {
+    const widthPct = (65 * size / 100).toFixed(1);
+    return `
+    ytd-watch-next-secondary-results-renderer yt-lockup-view-model a.yt-lockup-view-model__content-image {
+      width: ${widthPct}% !important;
+      min-width: 0 !important;
+      flex-shrink: 0 !important;
+    }
+  `;
+  }
+
+  function applySidebarThumbnails(size) {
+    if (size === 100) {
+      clearSidebarThumbnailOverride();
+      return;
+    }
+    let styleEl = document.getElementById(THUMBNAIL_STYLE_ID);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = THUMBNAIL_STYLE_ID;
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = getSidebarThumbnailCSS(size);
+  }
+
+  function clearSidebarThumbnailOverride() {
+    const styleEl = document.getElementById(THUMBNAIL_STYLE_ID);
+    if (styleEl) styleEl.remove();
+  }
+
   // ─── Original Titles (anti-translate) feature ─────────────────────────────
 
   let titlesInjected = false;
@@ -156,10 +193,11 @@ if (window !== window.top) {
   function validateSettings(raw) {
     if (!raw || typeof raw !== 'object') return null;
     return {
-      gridEnabled:    Boolean(raw.gridEnabled),
-      gridColumns:    Math.max(2, Math.min(8, parseInt(raw.gridColumns, 10) || 4)),
-      hideShorts:     Boolean(raw.hideShorts),
-      originalTitles: Boolean(raw.originalTitles),
+      gridEnabled:           Boolean(raw.gridEnabled),
+      gridColumns:           Math.max(2, Math.min(8, parseInt(raw.gridColumns, 10) || 4)),
+      hideShorts:            Boolean(raw.hideShorts),
+      originalTitles:        Boolean(raw.originalTitles),
+      sidebarThumbnailSize:  Math.max(50, Math.min(130, parseInt(raw.sidebarThumbnailSize, 10) || 100)),
     };
   }
 
@@ -180,6 +218,9 @@ if (window !== window.top) {
     } else {
       clearShortsHiding();
     }
+
+    // Sidebar thumbnail size
+    applySidebarThumbnails(settings.sidebarThumbnailSize);
 
     // Original Titles
     applyOriginalTitles(settings.originalTitles);
