@@ -15,16 +15,24 @@ const DEFAULT_SETTINGS = {
   gridColumns: 4,
   hideShorts: false,
   originalTitles: false,
+  sidebarThumbnailSize: 100,
 };
 
 const MIN_COLUMNS = 2;
 const MAX_COLUMNS = 8;
+
+const MIN_THUMBNAIL = 50;
+const MAX_THUMBNAIL = 130;
 
 // DOM refs — Grid
 const gridToggle = document.getElementById('grid-toggle');
 const columnSlider = document.getElementById('column-slider');
 const columnValue = document.getElementById('column-value');
 const sliderSection = document.getElementById('slider-section');
+
+// DOM refs — Sidebar thumbnails
+const thumbnailSlider = document.getElementById('thumbnail-slider');
+const thumbnailValue = document.getElementById('thumbnail-value');
 
 // DOM refs — new features
 const shortsToggle = document.getElementById('shorts-toggle');
@@ -54,6 +62,11 @@ function applyUIState(settings) {
   updateSliderFill(columnSlider);
   sliderSection.classList.toggle('disabled', !settings.gridEnabled);
   columnSlider.disabled = !settings.gridEnabled;
+
+  // Sidebar thumbnails
+  thumbnailSlider.value = settings.sidebarThumbnailSize;
+  thumbnailValue.textContent = settings.sidebarThumbnailSize + '%';
+  updateSliderFill(thumbnailSlider);
 
   // New features
   shortsToggle.checked = settings.hideShorts;
@@ -99,6 +112,23 @@ columnSlider.addEventListener('input', () => {
     if (chrome.runtime.lastError) return;
     const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
     settings.gridColumns = val;
+    saveSettings(settings);
+  });
+});
+
+// Sidebar thumbnail slider
+thumbnailSlider.addEventListener('input', () => {
+  let val = parseInt(thumbnailSlider.value, 10);
+  if (isNaN(val)) val = DEFAULT_SETTINGS.sidebarThumbnailSize;
+  val = Math.max(MIN_THUMBNAIL, Math.min(MAX_THUMBNAIL, val));
+
+  thumbnailValue.textContent = val + '%';
+  updateSliderFill(thumbnailSlider);
+
+  chrome.storage.sync.get(STORAGE_KEY, (result) => {
+    if (chrome.runtime.lastError) return;
+    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
+    settings.sidebarThumbnailSize = val;
     saveSettings(settings);
   });
 });
