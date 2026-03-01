@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   hideShorts: false,
   originalTitles: false,
   sidebarThumbnailSize: 100,
+  savedThumbnailSize: 100,
 };
 
 const MIN_COLUMNS = 2;
@@ -31,6 +32,7 @@ const columnValue = document.getElementById('column-value');
 const sliderSection = document.getElementById('slider-section');
 
 // DOM refs — Sidebar thumbnails
+const thumbnailSliderSection = document.getElementById('thumbnail-slider-section');
 const thumbnailSlider = document.getElementById('thumbnail-slider');
 const thumbnailValue = document.getElementById('thumbnail-value');
 
@@ -39,6 +41,10 @@ const shortsToggle = document.getElementById('shorts-toggle');
 const titlesToggle = document.getElementById('titles-toggle');
 
 // ── Helpers ───────────────────────────────────────────────────────────────
+
+// In-memory cache — loaded once at init, mutated directly by event handlers.
+// Eliminates redundant chrome.storage.sync.get() calls on every interaction.
+let currentSettings = null;
 
 function saveSettings(settings) {
   chrome.storage.sync.set({ [STORAGE_KEY]: settings }, () => {
@@ -63,10 +69,13 @@ function applyUIState(settings) {
   sliderSection.classList.toggle('disabled', !settings.gridEnabled);
   columnSlider.disabled = !settings.gridEnabled;
 
-  // Sidebar thumbnails
-  thumbnailSlider.value = settings.sidebarThumbnailSize;
-  thumbnailValue.textContent = settings.sidebarThumbnailSize + '%';
+  // Sidebar thumbnails — always show the user's saved preference in the slider
+  const displaySize = settings.savedThumbnailSize ?? settings.sidebarThumbnailSize;
+  thumbnailSlider.value = displaySize;
+  thumbnailValue.textContent = displaySize + '%';
   updateSliderFill(thumbnailSlider);
+  thumbnailSliderSection.classList.toggle('disabled', !settings.gridEnabled);
+  thumbnailSlider.disabled = !settings.gridEnabled;
 
   // New features
   shortsToggle.checked = settings.hideShorts;
@@ -75,28 +84,31 @@ function applyUIState(settings) {
 
 // ── Initialization ────────────────────────────────────────────────────────
 
-// Load stored settings (or defaults) when the popup opens
+// Load stored settings (or defaults) once when the popup opens
 chrome.storage.sync.get(STORAGE_KEY, (result) => {
   if (chrome.runtime.lastError) {
     console.error('[EasyTool] Storage read failed:', chrome.runtime.lastError.message);
-    applyUIState(DEFAULT_SETTINGS);
+    currentSettings = { ...DEFAULT_SETTINGS };
+    applyUIState(currentSettings);
     return;
   }
-  const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-  applyUIState(settings);
+  currentSettings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
+  applyUIState(currentSettings);
 });
 
 // ── Event listeners ───────────────────────────────────────────────────────
 
 // Grid toggle
 gridToggle.addEventListener('change', () => {
-  chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    if (chrome.runtime.lastError) return;
-    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    settings.gridEnabled = gridToggle.checked;
-    saveSettings(settings);
-    applyUIState(settings);
-  });
+  currentSettings.gridEnabled = gridToggle.checked;
+  if (!currentSettings.gridEnabled) {
+    currentSettings.savedThumbnailSize = currentSettings.sidebarThumbnailSize;
+    currentSettings.sidebarThumbnailSize = 100;
+  } else {
+    currentSettings.sidebarThumbnailSize = currentSettings.savedThumbnailSize;
+  }
+  saveSettings(currentSettings);
+  applyUIState(currentSettings);
 });
 
 // Grid slider: live update as the user drags (real-time feedback on the page)
@@ -105,15 +117,10 @@ columnSlider.addEventListener('input', () => {
   if (isNaN(val)) val = DEFAULT_SETTINGS.gridColumns;
   val = Math.max(MIN_COLUMNS, Math.min(MAX_COLUMNS, val));
 
+  currentSettings.gridColumns = val;
   columnValue.textContent = val;
   updateSliderFill(columnSlider);
-
-  chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    if (chrome.runtime.lastError) return;
-    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    settings.gridColumns = val;
-    saveSettings(settings);
-  });
+  saveSettings(currentSettings);
 });
 
 // Sidebar thumbnail slider
@@ -122,33 +129,21 @@ thumbnailSlider.addEventListener('input', () => {
   if (isNaN(val)) val = DEFAULT_SETTINGS.sidebarThumbnailSize;
   val = Math.max(MIN_THUMBNAIL, Math.min(MAX_THUMBNAIL, val));
 
+  currentSettings.sidebarThumbnailSize = val;
+  currentSettings.savedThumbnailSize = val;
   thumbnailValue.textContent = val + '%';
   updateSliderFill(thumbnailSlider);
-
-  chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    if (chrome.runtime.lastError) return;
-    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    settings.sidebarThumbnailSize = val;
-    saveSettings(settings);
-  });
+  saveSettings(currentSettings);
 });
 
 // Hide Shorts toggle
 shortsToggle.addEventListener('change', () => {
-  chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    if (chrome.runtime.lastError) return;
-    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    settings.hideShorts = shortsToggle.checked;
-    saveSettings(settings);
-  });
+  currentSettings.hideShorts = shortsToggle.checked;
+  saveSettings(currentSettings);
 });
 
 // Original Titles toggle
 titlesToggle.addEventListener('change', () => {
-  chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    if (chrome.runtime.lastError) return;
-    const settings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    settings.originalTitles = titlesToggle.checked;
-    saveSettings(settings);
-  });
+  currentSettings.originalTitles = titlesToggle.checked;
+  saveSettings(currentSettings);
 });

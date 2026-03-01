@@ -80,6 +80,7 @@ if (window !== window.top) {
   }
 
   let shortsObserver = null;
+  let shortsDebounceTimer = null;
 
   function applyShortsHiding() {
     // Inject the <style> block if not already present (persists across SPA navigations)
@@ -93,10 +94,13 @@ if (window !== window.top) {
     // Run JS fallback immediately for already-rendered shelf elements
     hideShortsShelfFallback();
 
-    // Watch for dynamically added Shorts shelves after SPA navigation
+    // Watch for dynamically added Shorts shelves after SPA navigation.
+    // Debounced to avoid running querySelectorAll on every DOM mutation —
+    // YouTube fires hundreds of mutations per second.
     if (!shortsObserver) {
       shortsObserver = new MutationObserver(() => {
-        hideShortsShelfFallback();
+        clearTimeout(shortsDebounceTimer);
+        shortsDebounceTimer = setTimeout(hideShortsShelfFallback, 50);
       });
       shortsObserver.observe(document.body, { childList: true, subtree: true });
     }
@@ -110,6 +114,7 @@ if (window !== window.top) {
       shortsObserver.disconnect();
       shortsObserver = null;
     }
+    clearTimeout(shortsDebounceTimer);
 
     // Remove any inline display:none that the JS fallback applied
     document.querySelectorAll('ytd-rich-section-renderer[style*="display"]').forEach((el) => {
@@ -220,7 +225,11 @@ if (window !== window.top) {
     }
 
     // Sidebar thumbnail size
-    applySidebarThumbnails(settings.sidebarThumbnailSize);
+    if (settings.gridEnabled) {
+      applySidebarThumbnails(settings.sidebarThumbnailSize);
+    } else {
+      clearSidebarThumbnailOverride();
+    }
 
     // Original Titles
     applyOriginalTitles(settings.originalTitles);
@@ -228,22 +237,25 @@ if (window !== window.top) {
 
   // ─── Initialization ───────────────────────────────────────────────────────
 
+  // In-memory cache — avoids redundant storage reads on every SPA navigation.
+  let cachedSettings = null;
+
   // Load settings on page load
   chrome.storage.sync.get(STORAGE_KEY, (result) => {
-    handleSettings(result[STORAGE_KEY]);
+    cachedSettings = result[STORAGE_KEY];
+    handleSettings(cachedSettings);
   });
 
   // React immediately when the user changes settings in the popup
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes[STORAGE_KEY]) {
-      handleSettings(changes[STORAGE_KEY].newValue);
+      cachedSettings = changes[STORAGE_KEY].newValue;
+      handleSettings(cachedSettings);
     }
   });
 
   // Re-apply after YouTube's internal SPA navigation (Home → Video → Home, etc.)
   document.addEventListener('yt-navigate-finish', () => {
-    chrome.storage.sync.get(STORAGE_KEY, (result) => {
-      setTimeout(() => handleSettings(result[STORAGE_KEY]), 400);
-    });
+    setTimeout(() => handleSettings(cachedSettings), 400);
   });
 }

@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self'; style-src 'self';">
+
   <title>YouTube EasyTool</title>
   <link rel="stylesheet" href="popup.css">
 </head>
@@ -50,11 +52,7 @@
           <span>8</span>
         </div>
       </div>
-    </section>
 
-    <div class="section-divider"></div>
-
-    <section class="feature-group">
       <div class="slider-section" id="thumbnail-slider-section">
         <div class="slider-header">
           <span class="feature-label">Sidebar thumbnail size</span>
@@ -105,7 +103,7 @@
   </main>
 
   <footer class="footer">
-    <span class="version">v1.1.0</span>
+    <span class="version">v1.1.1</span>
   </footer>
 
   <script src="popup.js"></script>
