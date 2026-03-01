@@ -1,8 +1,8 @@
 # YouTube EasyTool
 
-A lightweight browser extension for Chrome and Firefox that tames the most annoying YouTube settings — translating titles you didn't ask for, filling your feed with Shorts, ignoring how many videos you actually want per row, and making the watch page sidebar less overbearing.
+A browser extension for Chrome and Firefox that fixes YouTube's most annoying defaults: auto-translated titles, unwanted Shorts in your feed, a rigid video grid, and an oversized sidebar.
 
-> **v1.0.0 now available on the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)** 
+> **Now available on the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)** 
 
 > Firefox Add-ons submission is still pending review.
 
@@ -53,16 +53,12 @@ Alternatively, you can install it manually:
 
 ## How to use
 
-Click the YouTube EasyTool icon in your browser toolbar while on any YouTube page. Toggle features on or off — changes take effect immediately on the current page.
+Click the YouTube EasyTool icon in your browser toolbar while on any YouTube page. Toggle features on or off, some changes take effect immediately on the current page, for other you may need to refresh.
 
 ## Upcoming features
 
 - Auto-expand video descriptions
 - Hide end screen cards
-
-## Contributing
-
-Pull requests are welcome. Please open an issue first to discuss significant changes.
 
 ## License
 
