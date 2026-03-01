@@ -2,7 +2,9 @@
 
 A lightweight browser extension for Chrome and Firefox that tames the most annoying YouTube settings — translating titles you didn't ask for, filling your feed with Shorts, ignoring how many videos you actually want per row, and making the watch page sidebar less overbearing.
 
-> **Pending review** — submission is currently awaiting approval on the Chrome Web Store and Firefox Add-ons.
+> **v1.0.0 now available on the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)** 
+
+> Firefox Add-ons submission is still pending review.
 
 ## Preview
 
@@ -20,9 +22,11 @@ A lightweight browser extension for Chrome and Firefox that tames the most annoy
 
 ## Installation
 
-The extension is currently awaiting approval on the Chrome Web Store and Firefox Add-ons. In the meantime, you can install it manually.
-
 ### Chrome
+
+Install directly from the **[Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)**.
+
+Alternatively, you can install it manually:
 
 1. Download this repository — click **Code → Download ZIP** on GitHub and unzip it
 2. Open Chrome and go to `chrome://extensions`
