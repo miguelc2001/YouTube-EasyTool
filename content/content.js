@@ -20,6 +20,8 @@ if (window !== window.top) {
       display: grid !important;
       grid-template-columns: repeat(${columns}, minmax(0, 1fr)) !important;
       gap: 16px !important;
+      padding: 16px 16px !important;
+      box-sizing: border-box !important;
     }
     ytd-rich-item-renderer.ytd-rich-grid-renderer {
       width: 100% !important;
@@ -61,13 +63,19 @@ if (window !== window.top) {
     ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]) { display: none !important; }
 
     /* Search results Shorts shelf */
-    ytd-reel-shelf-renderer { display: none !important; }
+    ytd-search ytd-reel-shelf-renderer { display: none !important; }
 
-    /* Individual Shorts cards embedded in home/subscriptions feeds */
-    ytd-rich-item-renderer:has(ytd-reel-item-renderer) { display: none !important; }
+    /* Individual Shorts cards embedded in home/subscriptions feeds (scoped to grid to avoid history) */
+    ytd-rich-grid-renderer ytd-rich-item-renderer:has(ytd-reel-item-renderer) { display: none !important; }
 
-    /* Shorts in channel grid feeds */
-    ytd-grid-video-renderer:has(a[href*="/shorts/"]) { display: none !important; }
+    /* Shorts in channel grid feeds (exclude history) */
+    ytd-browse:not([page-subtype="history"]) ytd-grid-video-renderer:has(a[href*="/shorts/"]) { display: none !important; }
+
+    /* Individual Short videos in search results only (scoped to avoid hiding on history etc.) */
+    ytd-search ytd-video-renderer:has(a[href*="/shorts/"]) { display: none !important; }
+
+    /* Shorts shelf section in search results */
+    ytd-search grid-shelf-view-model { display: none !important; }
   `;
 
   // JS fallback for Firefox 109-120 (no :has() support): hide the home shelf
@@ -161,34 +169,14 @@ if (window !== window.top) {
 
   // ─── Original Titles (anti-translate) feature ─────────────────────────────
 
-  let titlesInjected = false;
-
-  function ensureTitlesScriptInjected() {
-    if (titlesInjected || window.__easytoolInjected) return;
-
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('content/inject-titles.js');
-    (document.head || document.documentElement).appendChild(script);
-    titlesInjected = true;
-  }
-
   function applyOriginalTitles(enabled) {
-    if (enabled) {
-      ensureTitlesScriptInjected();
-    }
-    // Dispatch the setting to the page-world script.
-    // Use a short delay on first injection to let the script load and register
-    // its event listener before we fire.
-    const dispatch = () => {
-      document.dispatchEvent(
-        new CustomEvent('easytool-settings', { detail: { originalTitles: enabled } })
-      );
-    };
-    if (enabled && !window.__easytoolInjected) {
-      setTimeout(dispatch, 50);
-    } else {
-      dispatch();
-    }
+    // Persist so inject-titles.js (document_start) can read it on the next load
+    // before YouTube fires its first API call.
+    try { localStorage.setItem('easytool-original-titles', enabled ? 'true' : 'false'); } catch (_) {}
+    // Also update the already-running page-world script for the current page.
+    document.dispatchEvent(
+      new CustomEvent('easytool-settings', { detail: { originalTitles: enabled } })
+    );
   }
 
   // ─── Settings handler ─────────────────────────────────────────────────────
@@ -256,6 +244,11 @@ if (window !== window.top) {
 
   // Re-apply after YouTube's internal SPA navigation (Home → Video → Home, etc.)
   document.addEventListener('yt-navigate-finish', () => {
+    // Original titles flag must be set before the next page's API calls fire,
+    // so apply it immediately rather than waiting for the DOM-settle delay.
+    const settings = validateSettings(cachedSettings);
+    if (settings) applyOriginalTitles(settings.originalTitles);
+
     setTimeout(() => handleSettings(cachedSettings), 400);
   });
 }
