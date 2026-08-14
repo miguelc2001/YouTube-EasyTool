@@ -4,7 +4,7 @@ A browser extension for Chrome and Firefox that fixes YouTube's most annoying de
 
 > **Now available on the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)** 
 
-> Firefox Add-ons submission is still pending review.
+> **Available at [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/youtube-easytool/)**
 
 ## Preview
 
