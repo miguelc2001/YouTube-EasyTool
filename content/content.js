@@ -36,6 +36,8 @@ if (window !== window.top) {
   `;
   }
 
+  // TODO: Add feature to resize video metadata ( <div class="ytLockupViewModelMetadata"> )
+
   function applyGridColumns(columns) {
     let styleEl = document.getElementById(GRID_STYLE_ID);
     if (!styleEl) {
@@ -178,6 +180,14 @@ if (window !== window.top) {
       new CustomEvent('easytool-settings', { detail: { originalTitles: enabled } })
     );
   }
+
+  // TODO: Add feature to remove the video player border radius
+  // ─── Remove border radius feature ─────────────────────────────────────────
+  // <ytd-player id="ytd-player" context="WEB_PLAYER_CONTEXT_CONFIG_ID_KEVLAR_WATCH" class="style-scope ytd-watch-flexy"></ytd-player>
+  // ytd-watch-flexy[rounded-player] #ytd-player.ytd-watch-flexy {
+  //   overflow: hidden;
+  //   border-radius: 12px;
+  // }
 
   // ─── Settings handler ─────────────────────────────────────────────────────
 
