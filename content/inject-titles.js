@@ -166,8 +166,8 @@
   function _findTitleEl(container) {
     return container.querySelector('#video-title') ||
            container.querySelector('yt-formatted-string#video-title') ||
-           container.querySelector('a.yt-lockup-metadata-view-model__title') ||
-           container.querySelector('.yt-lockup-metadata-view-model-wiz__title > .yt-core-attributed-string') ||
+           container.querySelector('a.ytLockupMetadataViewModelTitle .ytAttributedStringHost') ||
+           container.querySelector('a.ytLockupMetadataViewModelTitle') ||
            container.querySelector('#video-title-link');
   }
 
@@ -186,6 +186,13 @@
     // Update the separate link element's title attribute if present
     const link = container.querySelector('a#video-title-link');
     if (link && link.hasAttribute('title')) link.setAttribute('title', title);
+
+    // Update aria-label on the new lockup UI's title anchor and heading,
+    // so the accessible name matches the visible (untranslated) title too.
+    const titleAnchor = container.querySelector('a.ytLockupMetadataViewModelTitle');
+    if (titleAnchor && titleAnchor.hasAttribute('aria-label')) titleAnchor.setAttribute('aria-label', title);
+    const h3 = container.querySelector('h3[aria-label]');
+    if (h3) h3.setAttribute('aria-label', title);
   }
 
   function _fetchOembed(videoId) {
