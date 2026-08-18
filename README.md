@@ -2,9 +2,11 @@
 
 A browser extension for Chrome and Firefox that fixes YouTube's most annoying defaults: auto-translated titles, unwanted Shorts in your feed, a rigid video grid, and an oversized sidebar.
 
-> **Now available on the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)** 
+## Install
 
-> **Available at [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/youtube-easytool/)**
+> 🦊 **Firefox** — [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/youtube-easytool/)
+
+> 🌐 **Chrome / Edge / Brave / Opera** — [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)
 
 ## Preview
 
@@ -19,37 +21,6 @@ A browser extension for Chrome and Firefox that fixes YouTube's most annoying de
 **Hide Shorts** — Remove YouTube Shorts from your home feed, search results, and subscription feed. The Shorts section in the sidebar remains accessible if you want to browse it directly.
 
 **Original Titles** — Prevent YouTube from auto-translating video titles into your browser's language. Titles are shown in their original language.
-
-## Installation
-
-### Chrome
-
-Install directly from the **[Chrome Web Store](https://chromewebstore.google.com/detail/youtube-easytool/mpobhamgihljgnjoeohcfigenodfclik)**.
-
-Alternatively, you can install it manually:
-
-1. Download this repository — click **Code → Download ZIP** on GitHub and unzip it
-2. Open Chrome and go to `chrome://extensions`
-3. Enable **Developer Mode** (toggle in the top-right corner)
-4. Click **Load unpacked** and select the folder you just unzipped
-5. The YouTube EasyTool icon appears in your toolbar
-
-### Firefox
-
-**Temporary install** (removed when Firefox restarts):
-
-1. Download and unzip the repository
-2. Go to `about:debugging#/runtime/this-firefox`
-3. Click **Load Temporary Add-on** and select `manifest.json` from the unzipped folder
-
-**Permanent install** (without submitting to AMO):
-
-1. Download and unzip the repository
-2. Zip the contents of the unzipped folder and rename the file to `youtube-easytool.xpi`
-3. Go to `about:addons`, click the gear icon, then **Install Add-on From File**
-4. Select the `.xpi` file
-
-> Note: Firefox requires Developer Edition or setting `xpinstall.signatures.required` to `false` in `about:config` for unsigned add-ons.
 
 ## How to use
 
