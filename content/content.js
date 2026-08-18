@@ -134,13 +134,13 @@ if (window !== window.top) {
 
   const THUMBNAIL_STYLE_ID = 'easytool-sidebar-thumbnails';
 
-  // YouTube sets the thumbnail link (a.yt-lockup-view-model__content-image)
+  // YouTube sets the thumbnail link (a.ytLockupViewModelContentImage)
   // to width: 65% of its parent by default (inline style). We scale that
   // percentage proportionally using !important to override the inline style.
   function getSidebarThumbnailCSS(size) {
     const widthPct = (65 * size / 100).toFixed(1);
     return `
-    ytd-watch-next-secondary-results-renderer yt-lockup-view-model a.yt-lockup-view-model__content-image {
+    ytd-watch-next-secondary-results-renderer yt-lockup-view-model a.ytLockupViewModelContentImage {
       width: ${widthPct}% !important;
       min-width: 0 !important;
       flex-shrink: 0 !important;
