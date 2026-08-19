@@ -37,6 +37,14 @@ if (window !== window.top) {
   }
 
   // TODO: Add feature to resize video metadata ( <div class="ytLockupViewModelMetadata"> )
+  // or resize the whole container ( <ytd-rich-item-renderer class="style-scope yt-rich-grid-rederer" items-per-row="2" lockup="true" rendererd-from-rich-grid is-link-card-full-width></yt-rich-item-renderer>
+  // This could be a bad option depending on user display resolution
+  // Maybe have the option to adjust the whole container (changing no. columns will automatically adjust metadata size)
+  // And other option to manually resize the metadata
+  // basically have a checkbox called "auto" that will adjust the metadata acording to no. columns
+  // --> Other <--
+  // maybe no. columns should be dynamic, acording to window size
+  // the user should set the no. columns based on maximized window, but if the user shrinks the browser window by half, the columns should shrink by half.
 
   function applyGridColumns(columns) {
     let styleEl = document.getElementById(GRID_STYLE_ID);
