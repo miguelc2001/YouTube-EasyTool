@@ -14,7 +14,9 @@ A browser extension for Chrome and Firefox that fixes YouTube's most annoying de
 
 ## Features
 
-**Grid Layout** — Set the exact number of video columns on the YouTube home and subscriptions pages, from 2 to 8. The change is instant and the setting is remembered across sessions.
+**Grid Layout** — Set the exact number of video columns on the YouTube home and subscriptions pages, from 2 to 8. Includes optional dynamic responsive scaling to adapt gracefully across different screen sizes and split views.
+
+**Metadata Scaling** — Automatically or manually scale video titles, channel names, avatars, and metadata lines from 60% to 140% to match your chosen grid density.
 
 **Sidebar Thumbnail Size** — Resize the video thumbnails in the watch page sidebar. Drag the slider from 50% to 130% of the default size. Only affects the related videos panel — all other pages are untouched.
 
