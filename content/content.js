@@ -2,58 +2,129 @@
 // Runs on youtube.com pages. Reads settings from storage and modifies
 // the page by overriding YouTube's CSS/DOM.
 
-// Guard: bail out if running inside an iframe (e.g. ad iframes)
 if (window !== window.top) {
-  // do nothing
+  // do nothing in iframes
 } else {
   const STORAGE_KEY = 'settings';
   const GRID_STYLE_ID = 'easytool-grid-layout';
 
   // ─── Grid feature ─────────────────────────────────────────────────────────
 
-  // Builds CSS with the column count baked in — applies to any
-  // ytd-rich-grid-renderer (Home, Subscriptions, etc.) without depending on
-  // YouTube's inline CSS custom property, which only works reliably on Home.
-  function getGridLayoutCSS(columns) {
+  function getGridLayoutCSS(columns, responsive, autoMetadata, metadataScale) {
+    // Determine effective metadata scaling factor
+    let effectiveScale;
+    if (autoMetadata) {
+      // Smooth metadata scaling relative to the column density
+      effectiveScale = Math.max(0.8, Math.min(1.25, 1 + (4 - columns) * 0.05));
+    } else {
+      effectiveScale = (metadataScale || 100) / 100;
+    }
+
+    const titleSize = (1.65 * effectiveScale).toFixed(2);
+    const metaSize = (1.3 * effectiveScale).toFixed(2);
+    const avatarSize = Math.round(38 * effectiveScale);
+
+    // Exact percentage calculation per item taking 16px grid gap into account
+    const pctWidth = `calc((100% - ${(columns - 1) * 16}px) / ${columns})`;
+
+    let columnsTemplate = `repeat(${columns}, minmax(0, 1fr))`;
+    let responsiveRules = '';
+
+    if (responsive) {
+      // Uses percentage width as the basis so all 8 columns fit on widescreen displays,
+      // while stepping down proportionally on narrower viewports.
+      columnsTemplate = `repeat(auto-fit, minmax(max(180px, ${pctWidth}), 1fr))`;
+
+      responsiveRules = `
+      @media (max-width: 1400px) {
+        ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
+          grid-template-columns: repeat(${Math.min(columns, 5)}, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 1100px) {
+        ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
+          grid-template-columns: repeat(${Math.min(columns, 4)}, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 850px) {
+        ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
+          grid-template-columns: repeat(${Math.min(columns, 3)}, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 600px) {
+        ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
+          grid-template-columns: repeat(${Math.min(columns, 2)}, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 450px) {
+        ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    `;
+    }
+
     return `
+    /* Container overrides for YouTube home/subscriptions feed */
+    ytd-rich-grid-renderer {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
     ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
       display: grid !important;
-      grid-template-columns: repeat(${columns}, minmax(0, 1fr)) !important;
+      grid-template-columns: ${columnsTemplate} !important;
       gap: 16px !important;
-      padding: 16px 16px !important;
+      padding: 16px !important;
+      width: 100% !important;
+      max-width: 100% !important;
       box-sizing: border-box !important;
     }
     ytd-rich-item-renderer.ytd-rich-grid-renderer {
       width: 100% !important;
       max-width: 100% !important;
+      min-width: 0 !important;
       margin: 0 !important;
     }
-    ytd-rich-section-renderer.ytd-rich-grid-renderer {
+    /* Fixed: Matched without unrecognised tag names to clear IDE warnings */
+    #contents.ytd-rich-grid-renderer > *.ytd-rich-grid-renderer:not(ytd-rich-item-renderer),
+    *[class*="ytd-rich-section-renderer"] {
       grid-column: 1 / -1 !important;
       width: 100% !important;
       max-width: 100% !important;
     }
+
+    /* Metadata scaling */
+    .ytLockupViewModelMetadata,
+    ytd-rich-item-renderer #details {
+      zoom: ${effectiveScale.toFixed(2)};
+    }
+    ytd-rich-item-renderer #video-title,
+    ytd-rich-item-renderer .ytLockupMetadataViewModelTitle {
+      font-size: ${titleSize}rem !important;
+      line-height: calc(${titleSize}rem * 1.35) !important;
+    }
+    ytd-rich-item-renderer #channel-name,
+    ytd-rich-item-renderer #metadata-line,
+    ytd-rich-item-renderer .ytLockupMetadataViewModelSubhead {
+      font-size: ${metaSize}rem !important;
+    }
+    ytd-rich-item-renderer #avatar-container,
+    ytd-rich-item-renderer .ytLockupMetadataViewModelAvatar {
+      width: ${avatarSize}px !important;
+      height: ${avatarSize}px !important;
+    }
+    ${responsiveRules}
   `;
   }
 
-  // TODO: Add feature to resize video metadata ( <div class="ytLockupViewModelMetadata"> )
-  // or resize the whole container ( <ytd-rich-item-renderer class="style-scope yt-rich-grid-rederer" items-per-row="2" lockup="true" rendererd-from-rich-grid is-link-card-full-width></yt-rich-item-renderer>
-  // This could be a bad option depending on user display resolution
-  // Maybe have the option to adjust the whole container (changing no. columns will automatically adjust metadata size)
-  // And other option to manually resize the metadata
-  // basically have a checkbox called "auto" that will adjust the metadata acording to no. columns
-  // --> Other <--
-  // maybe no. columns should be dynamic, acording to window size
-  // the user should set the no. columns based on maximized window, but if the user shrinks the browser window by half, the columns should shrink by half.
-
-  function applyGridColumns(columns) {
+  function applyGridColumns(columns, responsive, autoMetadata, metadataScale) {
     let styleEl = document.getElementById(GRID_STYLE_ID);
     if (!styleEl) {
       styleEl = document.createElement('style');
       styleEl.id = GRID_STYLE_ID;
       document.head.appendChild(styleEl);
     }
-    styleEl.textContent = getGridLayoutCSS(columns);
+    styleEl.textContent = getGridLayoutCSS(columns, responsive, autoMetadata, metadataScale);
   }
 
   function clearGridOverride() {
@@ -65,34 +136,21 @@ if (window !== window.top) {
 
   const SHORTS_STYLE_ID = 'easytool-hide-shorts';
 
-  // CSS using :has() (Chrome 105+, Firefox 121+).
-  // Sidebar navigation entries are intentionally NOT hidden so the user can
-  // still navigate to the Shorts section to watch them if they choose.
+  /* Fixed: Use standard attribute and wildcard selectors */
   const SHORTS_CSS = `
-    /* Home page Shorts shelf + its outer section wrapper */
-    ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]) { display: none !important; }
-
-    /* Search results Shorts shelf */
+    * > *[is-shorts],
+    *:has(> *[is-shorts]),
+    *:has(> #rich-shelf-header-container),
     ytd-search ytd-reel-shelf-renderer { display: none !important; }
-
-    /* Individual Shorts cards embedded in home/subscriptions feeds (scoped to grid to avoid history) */
     ytd-rich-grid-renderer ytd-rich-item-renderer:has(ytd-reel-item-renderer) { display: none !important; }
-
-    /* Shorts in channel grid feeds (exclude history) */
     ytd-browse:not([page-subtype="history"]) ytd-grid-video-renderer:has(a[href*="/shorts/"]) { display: none !important; }
-
-    /* Individual Short videos in search results only (scoped to avoid hiding on history etc.) */
     ytd-search ytd-video-renderer:has(a[href*="/shorts/"]) { display: none !important; }
-
-    /* Shorts shelf section in search results */
     ytd-search grid-shelf-view-model { display: none !important; }
   `;
 
-  // JS fallback for Firefox 109-120 (no :has() support): hide the home shelf
-  // container that the CSS rule above can't reach on those browser versions.
-  function hideShortsShelfFallback() {
-    document.querySelectorAll('ytd-rich-shelf-renderer[is-shorts]').forEach((shelf) => {
-      const section = shelf.closest('ytd-rich-section-renderer');
+  function hideShortsFallback() {
+    document.querySelectorAll('*[is-shorts]').forEach((shelf) => {
+      const section = shelf.closest('#contents > *') || shelf.parentElement;
       if (section) section.style.setProperty('display', 'none', 'important');
     });
   }
@@ -101,24 +159,17 @@ if (window !== window.top) {
   let shortsDebounceTimer = null;
 
   function applyShortsHiding() {
-    // Inject the <style> block if not already present (persists across SPA navigations)
     if (!document.getElementById(SHORTS_STYLE_ID)) {
       const style = document.createElement('style');
       style.id = SHORTS_STYLE_ID;
       style.textContent = SHORTS_CSS;
       document.head.appendChild(style);
     }
-
-    // Run JS fallback immediately for already-rendered shelf elements
-    hideShortsShelfFallback();
-
-    // Watch for dynamically added Shorts shelves after SPA navigation.
-    // Debounced to avoid running querySelectorAll on every DOM mutation —
-    // YouTube fires hundreds of mutations per second.
+    hideShortsFallback();
     if (!shortsObserver) {
       shortsObserver = new MutationObserver(() => {
         clearTimeout(shortsDebounceTimer);
-        shortsDebounceTimer = setTimeout(hideShortsShelfFallback, 50);
+        shortsDebounceTimer = setTimeout(hideShortsFallback, 50);
       });
       shortsObserver.observe(document.body, { childList: true, subtree: true });
     }
@@ -127,15 +178,12 @@ if (window !== window.top) {
   function clearShortsHiding() {
     const style = document.getElementById(SHORTS_STYLE_ID);
     if (style) style.remove();
-
     if (shortsObserver) {
       shortsObserver.disconnect();
       shortsObserver = null;
     }
     clearTimeout(shortsDebounceTimer);
-
-    // Remove any inline display:none that the JS fallback applied
-    document.querySelectorAll('ytd-rich-section-renderer[style*="display"]').forEach((el) => {
+    document.querySelectorAll('#contents > *[style*="display"]').forEach((el) => {
       el.style.removeProperty('display');
     });
   }
@@ -144,9 +192,6 @@ if (window !== window.top) {
 
   const THUMBNAIL_STYLE_ID = 'easytool-sidebar-thumbnails';
 
-  // YouTube sets the thumbnail link (a.ytLockupViewModelContentImage)
-  // to width: 65% of its parent by default (inline style). We scale that
-  // percentage proportionally using !important to override the inline style.
   function getSidebarThumbnailCSS(size) {
     const widthPct = (65 * size / 100).toFixed(1);
     return `
@@ -166,7 +211,7 @@ if (window !== window.top) {
     let styleEl = document.getElementById(THUMBNAIL_STYLE_ID);
     if (!styleEl) {
       styleEl = document.createElement('style');
-      styleEl.id = THUMBNAIL_STYLE_ID;
+      styleEl.id = GRID_STYLE_ID;
       document.head.appendChild(styleEl);
     }
     styleEl.textContent = getSidebarThumbnailCSS(size);
@@ -180,12 +225,9 @@ if (window !== window.top) {
   // ─── Original Titles (anti-translate) feature ─────────────────────────────
 
   function applyOriginalTitles(enabled) {
-    // Persist so inject-titles.js (document_start) can read it on the next load
-    // before YouTube fires its first API call.
     try { localStorage.setItem('easytool-original-titles', enabled ? 'true' : 'false'); } catch (_) {}
-    // Also update the already-running page-world script for the current page.
     document.dispatchEvent(
-      new CustomEvent('easytool-settings', { detail: { originalTitles: enabled } })
+        new CustomEvent('easytool-settings', { detail: { originalTitles: enabled } })
     );
   }
 
@@ -216,13 +258,14 @@ if (window !== window.top) {
 
   // ─── Settings handler ─────────────────────────────────────────────────────
 
-  // Validates and sanitizes settings from storage before use.
-  // Guards against corrupted storage or unexpected types.
   function validateSettings(raw) {
     if (!raw || typeof raw !== 'object') return null;
     return {
       gridEnabled:           Boolean(raw.gridEnabled),
       gridColumns:           Math.max(2, Math.min(8, parseInt(raw.gridColumns, 10) || 4)),
+      responsiveGrid:        raw.responsiveGrid !== false,
+      autoMetadata:          raw.autoMetadata !== false,
+      metadataScale:         Math.max(60, Math.min(140, parseInt(raw.metadataScale, 10) || 100)),
       hideShorts:            Boolean(raw.hideShorts),
       originalTitles:        Boolean(raw.originalTitles),
       sidebarThumbnailSize:  Math.max(50, Math.min(130, parseInt(raw.sidebarThumbnailSize, 10) || 100)),
@@ -234,9 +277,14 @@ if (window !== window.top) {
     const settings = validateSettings(raw);
     if (!settings) return;
 
-    // Grid
+    // Grid Layout & Scaling
     if (settings.gridEnabled && settings.gridColumns) {
-      applyGridColumns(settings.gridColumns);
+      applyGridColumns(
+          settings.gridColumns,
+          settings.responsiveGrid,
+          settings.autoMetadata,
+          settings.metadataScale
+      );
     } else {
       clearGridOverride();
     }
@@ -268,16 +316,13 @@ if (window !== window.top) {
 
   // ─── Initialization ───────────────────────────────────────────────────────
 
-  // In-memory cache — avoids redundant storage reads on every SPA navigation.
   let cachedSettings = null;
 
-  // Load settings on page load
   chrome.storage.sync.get(STORAGE_KEY, (result) => {
     cachedSettings = result[STORAGE_KEY];
     handleSettings(cachedSettings);
   });
 
-  // React immediately when the user changes settings in the popup
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes[STORAGE_KEY]) {
       cachedSettings = changes[STORAGE_KEY].newValue;
@@ -285,13 +330,9 @@ if (window !== window.top) {
     }
   });
 
-  // Re-apply after YouTube's internal SPA navigation (Home → Video → Home, etc.)
   document.addEventListener('yt-navigate-finish', () => {
-    // Original titles flag must be set before the next page's API calls fire,
-    // so apply it immediately rather than waiting for the DOM-settle delay.
     const settings = validateSettings(cachedSettings);
     if (settings) applyOriginalTitles(settings.originalTitles);
-
     setTimeout(() => handleSettings(cachedSettings), 400);
   });
 }

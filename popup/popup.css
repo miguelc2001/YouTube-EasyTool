@@ -8,97 +8,159 @@
   padding: 0;
 }
 
-/* ── Design tokens (dark mode default) ──────────────────────────────────── */
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
 
 :root {
   --bg-primary: #0f0f0f;
-  --bg-surface: #1a1a1a;
-  --bg-hover: #222222;
-  --border: #2a2a2a;
+  --bg-surface: #181818;
+  --bg-subtle: #212121;
+  --border: #2c2c2c;
+  --border-subtle: #222222;
   --text-primary: #f1f1f1;
-  --text-secondary: #909090;
+  --text-secondary: #8c8c8c;
   --accent: #ff0000;
-  --accent-hover: #cc0000;
-  --toggle-off: #3a3a3a;
+  --toggle-off: #343434;
   --thumb: #ffffff;
-  --track-empty: #3a3a3a;
-  --disabled-opacity: 0.38;
+  --track-empty: #333333;
+  --disabled-opacity: 0.35;
   --radius: 8px;
-  --radius-sm: 5px;
+  --radius-sm: 4px;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg-primary: #ffffff;
-    --bg-surface: #f5f5f5;
-    --bg-hover: #eeeeee;
-    --border: #e0e0e0;
-    --text-primary: #0f0f0f;
-    --text-secondary: #666666;
+    --bg-primary: #f6f6f6;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f9f9f9;
+    --border: #e4e4e4;
+    --border-subtle: #ebebeb;
+    --text-primary: #111111;
+    --text-secondary: #6e6e6e;
     --accent: #cc0000;
-    --accent-hover: #aa0000;
-    --toggle-off: #c0c0c0;
-    --track-empty: #d0d0d0;
+    --toggle-off: #d0d0d0;
+    --track-empty: #dcdcdc;
   }
 }
 
 /* ── Base ────────────────────────────────────────────────────────────────── */
 
+html {
+  width: 280px;
+  min-width: 280px;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+}
+
 body {
-  width: 300px;
-  min-width: 300px;
+  width: 280px;
+  min-width: 280px;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   user-select: none;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
 
 .header {
-  padding: 14px 16px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
 }
 
 .brand-icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  border-radius: 4px;
 }
 
 .brand-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
-/* ── Features ────────────────────────────────────────────────────────────── */
+.version {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* ── Features Container & Cards ─────────────────────────────────────────── */
 
 .features {
-  padding: 4px 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.feature-group {
-  padding: 2px 0;
+.feature-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
+
+.inner-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0 10px;
+}
+
+/* ── Collapsible Card Content (Instant) ─────────────────────────────────── */
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+  padding: 4px 0 6px;
+}
+
+.card-content.hidden {
+  display: none !important;
+}
+
+/* ── Feature Rows ───────────────────────────────────────────────────────── */
 
 .feature-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  gap: 12px;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.sub-feature-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px 5px 18px;
+  gap: 8px;
+}
+
+.sub-feature-row.disabled {
+  opacity: var(--disabled-opacity);
+  pointer-events: none;
 }
 
 .feature-info {
@@ -110,21 +172,31 @@ body {
 }
 
 .feature-label {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sub-label {
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
 .feature-desc {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ── Toggle switch ───────────────────────────────────────────────────────── */
+/* ── Compact Toggle Switch ──────────────────────────────────────────────── */
 
 .toggle {
   flex-shrink: 0;
   cursor: pointer;
+  display: inline-flex;
 }
 
 .toggle input {
@@ -136,12 +208,11 @@ body {
 
 .toggle-track {
   display: block;
-  width: 42px;
-  height: 24px;
+  width: 32px;
+  height: 18px;
   background: var(--toggle-off);
-  border-radius: 12px;
+  border-radius: 10px;
   position: relative;
-  transition: background 0.2s ease;
   cursor: pointer;
 }
 
@@ -152,31 +223,38 @@ body {
 .toggle-track::after {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   background: var(--thumb);
   border-radius: 50%;
-  top: 3px;
-  left: 3px;
-  transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .toggle input:checked + .toggle-track::after {
-  transform: translateX(18px);
+  transform: translateX(14px);
 }
 
-/* Focus ring for keyboard nav */
-.toggle input:focus-visible + .toggle-track {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* Smaller toggle for sub-options */
+.toggle-sm .toggle-track {
+  width: 28px;
+  height: 16px;
 }
 
-/* ── Slider section ──────────────────────────────────────────────────────── */
+.toggle-sm .toggle-track::after {
+  width: 12px;
+  height: 12px;
+}
+
+.toggle-sm input:checked + .toggle-track::after {
+  transform: translateX(12px);
+}
+
+/* ── Slider Section ─────────────────────────────────────────────────────── */
 
 .slider-section {
-  padding: 4px 16px 12px;
-  transition: opacity 0.2s ease;
+  padding: 4px 10px 6px;
 }
 
 .slider-section.disabled {
@@ -188,102 +266,77 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .slider-value {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--accent);
-  min-width: 18px;
+  min-width: 24px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-/* Range input */
+/* Compact Range Input */
 input[type="range"] {
+  --fill: 50%;
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 3px;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
   background: linear-gradient(
-    to right,
-    var(--accent) 0%,
-    var(--accent) var(--fill, 33.3%),
-    var(--track-empty) var(--fill, 33.3%),
-    var(--track-empty) 100%
+          to right,
+          var(--accent) 0%,
+          var(--accent) var(--fill),
+          var(--track-empty) var(--fill),
+          var(--track-empty) 100%
   );
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--thumb);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: grab;
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   border: none;
   border-radius: 50%;
   background: var(--thumb);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: grab;
-}
-
-input[type="range"]:active::-webkit-slider-thumb {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  cursor: grabbing;
-}
-
-input[type="range"]:active::-moz-range-thumb {
-  transform: scale(1.15);
-  cursor: grabbing;
-}
-
-input[type="range"]:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 3px;
 }
 
 .slider-bounds {
   display: flex;
   justify-content: space-between;
-  margin-top: 6px;
-  font-size: 10px;
+  margin-top: 3px;
+  font-size: 9px;
   color: var(--text-secondary);
 }
 
-/* ── Section divider ─────────────────────────────────────────────────────── */
+/* ── Interactive Transitions (Active only after storage initialization) ─── */
 
-.section-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 0 16px;
+body.interactive .toggle-track {
+  transition: background 0.2s ease;
 }
 
-/* ── Footer ──────────────────────────────────────────────────────────────── */
-
-.footer {
-  padding: 8px 16px 10px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
+body.interactive .toggle-track::after {
+  transition: transform 0.2s ease;
 }
 
-.version {
-  font-size: 10px;
-  color: var(--text-secondary);
-  opacity: 0.6;
+body.interactive .sub-feature-row,
+body.interactive .slider-section {
+  transition: opacity 0.2s ease;
 }

@@ -10,115 +10,161 @@
 </head>
 <body>
 
-  <header class="header">
-    <div class="brand">
-      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="24" height="24" rx="5" fill="#FF0000"/>
-        <path d="M9.5 7.5L16.5 12L9.5 16.5V7.5Z" fill="white"/>
-      </svg>
-      <span class="brand-name">YouTube EasyTool</span>
+<header class="header">
+  <div class="brand">
+    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="24" height="24" rx="4" fill="#FF0000"/>
+      <path d="M9.5 7.5L16.5 12L9.5 16.5V7.5Z" fill="white"/>
+    </svg>
+    <span class="brand-name">YouTube EasyTool</span>
+  </div>
+  <span class="version">v1.2.0</span>
+</header>
+
+<main class="features">
+
+  <!-- Card 1: Custom Grid Layout & Sizing -->
+  <section class="feature-card">
+    <div class="feature-row">
+      <div class="feature-info">
+        <span class="feature-label">Custom Layout</span>
+        <span class="feature-desc">Grid columns and card scaling</span>
+      </div>
+      <label class="toggle" aria-label="Enable grid layout customization">
+        <input type="checkbox" id="grid-toggle">
+        <span class="toggle-track"></span>
+      </label>
     </div>
-  </header>
 
-  <main class="features">
-
-    <section class="feature-group">
-      <div class="feature-row">
-        <div class="feature-info">
-          <span class="feature-label">Custom Layout</span>
+    <div class="card-content" id="grid-controls-group">
+      <div class="card-content-inner">
+        <div class="slider-section" id="slider-section">
+          <div class="slider-header">
+            <span class="sub-label">Videos per row</span>
+            <span class="slider-value" id="column-value">4</span>
+          </div>
+          <input
+                  type="range"
+                  id="column-slider"
+                  min="2"
+                  max="8"
+                  step="1"
+                  value="4"
+                  aria-label="Number of videos per row"
+          >
+          <div class="slider-bounds">
+            <span>2</span>
+            <span>8</span>
+          </div>
         </div>
-        <label class="toggle" aria-label="Enable grid layout customization">
-          <input type="checkbox" id="grid-toggle">
-          <span class="toggle-track"></span>
-        </label>
+
+        <div class="sub-feature-row" id="responsive-grid-row">
+          <div class="feature-info">
+            <span class="sub-label">Dynamic scaling</span>
+            <span class="feature-desc">Scale columns on smaller screens</span>
+          </div>
+          <label class="toggle toggle-sm" aria-label="Dynamic column scaling">
+            <input type="checkbox" id="responsive-grid-toggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="sub-feature-row" id="auto-metadata-row">
+          <div class="feature-info">
+            <span class="sub-label">Auto-scale metadata</span>
+            <span class="feature-desc">Adjust font and spacing by columns</span>
+          </div>
+          <label class="toggle toggle-sm" aria-label="Auto scale metadata">
+            <input type="checkbox" id="auto-metadata-toggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="slider-section" id="metadata-slider-section">
+          <div class="slider-header">
+            <span class="sub-label">Metadata size</span>
+            <span class="slider-value" id="metadata-value">100%</span>
+          </div>
+          <input
+                  type="range"
+                  id="metadata-slider"
+                  min="60"
+                  max="140"
+                  step="5"
+                  value="100"
+                  aria-label="Metadata size percentage"
+          >
+          <div class="slider-bounds">
+            <span>60%</span>
+            <span>140%</span>
+          </div>
+        </div>
+
+        <div class="slider-section" id="thumbnail-slider-section">
+          <div class="slider-header">
+            <span class="sub-label">Sidebar thumbnail size</span>
+            <span class="slider-value" id="thumbnail-value">100%</span>
+          </div>
+          <input
+                  type="range"
+                  id="thumbnail-slider"
+                  min="50"
+                  max="130"
+                  step="5"
+                  value="100"
+                  aria-label="Sidebar thumbnail size percentage"
+          >
+          <div class="slider-bounds">
+            <span>50%</span>
+            <span>130%</span>
+          </div>
+        </div>
       </div>
+    </div>
+  </section>
 
-      <div class="slider-section" id="slider-section">
-        <div class="slider-header">
-          <span class="feature-label">Videos per row</span>
-          <span class="slider-value" id="column-value">4</span>
-        </div>
-        <input
-          type="range"
-          id="column-slider"
-          min="2"
-          max="8"
-          step="1"
-          value="4"
-          aria-label="Number of videos per row"
-        >
-        <div class="slider-bounds">
-          <span>2</span>
-          <span>8</span>
-        </div>
+  <!-- Card 2: Content Filtering & Anti-Translate -->
+  <section class="feature-card">
+    <div class="feature-row">
+      <div class="feature-info">
+        <span class="feature-label">Square Video Player</span>
+        <span class="feature-desc">Remove rounded corners</span>
       </div>
+      <label class="toggle" aria-label="Remove video player border radius">
+        <input type="checkbox" id="radius-toggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
 
-      <div class="slider-section" id="thumbnail-slider-section">
-        <div class="slider-header">
-          <span class="feature-label">Sidebar thumbnail size</span>
-          <span class="slider-value" id="thumbnail-value">100%</span>
-        </div>
-        <input
-          type="range"
-          id="thumbnail-slider"
-          min="50"
-          max="130"
-          step="5"
-          value="100"
-          aria-label="Sidebar thumbnail size percentage"
-        >
-        <div class="slider-bounds">
-          <span>50%</span>
-          <span>130%</span>
-        </div>
+    <div class="inner-divider"></div>
+
+    <div class="feature-row">
+      <div class="feature-info">
+        <span class="feature-label">Hide Shorts</span>
+        <span class="feature-desc">Feeds and search results</span>
       </div>
-    </section>
+      <label class="toggle" aria-label="Hide YouTube Shorts">
+        <input type="checkbox" id="shorts-toggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
 
-    <div class="section-divider"></div>
+    <div class="inner-divider"></div>
 
-    <section class="feature-group">
-      <div class="feature-row">
-        <div class="feature-info">
-          <span class="feature-label">Hide Shorts</span>
-          <span class="feature-desc">Remove Shorts from feeds and search</span>
-        </div>
-        <label class="toggle" aria-label="Hide YouTube Shorts">
-          <input type="checkbox" id="shorts-toggle">
-          <span class="toggle-track"></span>
-        </label>
+    <div class="feature-row">
+      <div class="feature-info">
+        <span class="feature-label">Original Titles</span>
+        <span class="feature-desc">Prevent auto-translation</span>
       </div>
+      <label class="toggle" aria-label="Show original video titles">
+        <input type="checkbox" id="titles-toggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+  </section>
 
-      <div class="feature-row">
-        <div class="feature-info">
-          <span class="feature-label">Original Titles</span>
-          <span class="feature-desc">Prevent YouTube from translating video titles</span>
-        </div>
-        <label class="toggle" aria-label="Show original video titles">
-          <input type="checkbox" id="titles-toggle">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-    </section>
+</main>
 
-    <section class="feature-group">
-      <div class="feature-row">
-        <div class="feature-info">
-          <span class="feature-label">Square Video Player</span>
-          <span class="feature-desc">Remove rounded corners from the player</span>
-        </div>
-        <label class="toggle" aria-label="Remove video player border radius">
-          <input type="checkbox" id="radius-toggle">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <span class="version">v1.2.0</span>
-  </footer>
-
-  <script src="popup.js"></script>
+<script src="popup.js"></script>
 </body>
 </html>
