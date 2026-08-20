@@ -22,6 +22,8 @@ A browser extension for Chrome and Firefox that fixes YouTube's most annoying de
 
 **Original Titles** — Prevent YouTube from auto-translating video titles into your browser's language. Titles are shown in their original language.
 
+**Square Video Player** — Remove rounded corners from the YouTube video player for a clean, edge-to-edge square look.
+
 ## How to use
 
 Click the YouTube EasyTool icon in your browser toolbar while on any YouTube page. Toggle features on or off, some changes take effect immediately on the current page, for other you may need to refresh.

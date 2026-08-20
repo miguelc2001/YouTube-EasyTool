@@ -189,13 +189,30 @@ if (window !== window.top) {
     );
   }
 
-  // TODO: Add feature to remove the video player border radius
   // ─── Remove border radius feature ─────────────────────────────────────────
-  // <ytd-player id="ytd-player" context="WEB_PLAYER_CONTEXT_CONFIG_ID_KEVLAR_WATCH" class="style-scope ytd-watch-flexy"></ytd-player>
-  // ytd-watch-flexy[rounded-player] #ytd-player.ytd-watch-flexy {
-  //   overflow: hidden;
-  //   border-radius: 12px;
-  // }
+
+  const BORDER_RADIUS_STYLE_ID = 'easytool-player-border-radius';
+
+  const BORDER_RADIUS_CSS = `
+    ytd-watch-flexy[rounded-player] #ytd-player.ytd-watch-flexy {
+      border-radius: 0px !important;
+    }
+  `;
+
+  function applyBorderRadiusRemoval() {
+    let styleEl = document.getElementById(BORDER_RADIUS_STYLE_ID);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = BORDER_RADIUS_STYLE_ID;
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = BORDER_RADIUS_CSS;
+  }
+
+  function clearBorderRadiusOverride() {
+    const styleEl = document.getElementById(BORDER_RADIUS_STYLE_ID);
+    if (styleEl) styleEl.remove();
+  }
 
   // ─── Settings handler ─────────────────────────────────────────────────────
 
@@ -209,6 +226,7 @@ if (window !== window.top) {
       hideShorts:            Boolean(raw.hideShorts),
       originalTitles:        Boolean(raw.originalTitles),
       sidebarThumbnailSize:  Math.max(50, Math.min(130, parseInt(raw.sidebarThumbnailSize, 10) || 100)),
+      removeBorderRadius:    Boolean(raw.removeBorderRadius),
     };
   }
 
@@ -239,6 +257,13 @@ if (window !== window.top) {
 
     // Original Titles
     applyOriginalTitles(settings.originalTitles);
+
+    // Remove Player Border Radius
+    if (settings.removeBorderRadius) {
+      applyBorderRadiusRemoval();
+    } else {
+      clearBorderRadiusOverride();
+    }
   }
 
   // ─── Initialization ───────────────────────────────────────────────────────
