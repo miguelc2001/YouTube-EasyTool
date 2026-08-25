@@ -1,16 +1,9 @@
-// YouTube EasyTool — Popup Script
-
-// Monitor scaling using CSS scale variable rather than direct body zoom
-// to allow the browser popup window to shrink dynamically on collapse.
-(function scaleToMonitor() {
-  const physW = window.screen.width * (window.devicePixelRatio || 1);
-  const scale = physW >= 3840 ? 1.33 : physW >= 2560 ? 1.15 : 1;
-  if (scale > 1) {
-    document.documentElement.style.zoom = String(scale);
-  }
-}());
+// YouTube EasyTool Popup Script
 
 const STORAGE_KEY = 'settings';
+const BASE_WIDTH = 280;        // must match the html/body width in popup.css
+const POPUP_MAX_HEIGHT = 600;  // Chrome's hard cap for extension popups
+const SAVE_DELAY = 250;        // ms, keeps slider drags under the sync write quota
 
 const DEFAULT_SETTINGS = {
   gridEnabled: true,
@@ -25,39 +18,43 @@ const DEFAULT_SETTINGS = {
   removeBorderRadius: false,
 };
 
-const MIN_COLUMNS = 2;
-const MAX_COLUMNS = 8;
-const MIN_THUMBNAIL = 50;
-const MAX_THUMBNAIL = 130;
-const MIN_METADATA = 60;
-const MAX_METADATA = 140;
+// Must match the min/max on the matching range inputs in popup.html.
+const LIMITS = {
+  gridColumns: [2, 8],
+  metadataScale: [60, 140],
+  sidebarThumbnailSize: [50, 130],
+  savedThumbnailSize: [50, 130],
+};
 
-// DOM refs
-const gridToggle = document.getElementById('grid-toggle');
-const gridControlsGroup = document.getElementById('grid-controls-group');
-const columnSlider = document.getElementById('column-slider');
-const columnValue = document.getElementById('column-value');
-const sliderSection = document.getElementById('slider-section');
+const $ = (id) => document.getElementById(id);
 
-const responsiveGridRow = document.getElementById('responsive-grid-row');
-const responsiveGridToggle = document.getElementById('responsive-grid-toggle');
-const autoMetadataRow = document.getElementById('auto-metadata-row');
-const autoMetadataToggle = document.getElementById('auto-metadata-toggle');
-const metadataSliderSection = document.getElementById('metadata-slider-section');
-const metadataSlider = document.getElementById('metadata-slider');
-const metadataValue = document.getElementById('metadata-value');
+const ui = {
+  version: $('version'),
+  gridToggle: $('grid-toggle'),
+  gridControls: $('grid-controls-group'),
+  columnSlider: $('column-slider'),
+  columnValue: $('column-value'),
+  responsiveGridToggle: $('responsive-grid-toggle'),
+  autoMetadataToggle: $('auto-metadata-toggle'),
+  metadataSection: $('metadata-slider-section'),
+  metadataSlider: $('metadata-slider'),
+  metadataValue: $('metadata-value'),
+  thumbnailSlider: $('thumbnail-slider'),
+  thumbnailValue: $('thumbnail-value'),
+  shortsToggle: $('shorts-toggle'),
+  titlesToggle: $('titles-toggle'),
+  radiusToggle: $('radius-toggle'),
+};
 
-const thumbnailSliderSection = document.getElementById('thumbnail-slider-section');
-const thumbnailSlider = document.getElementById('thumbnail-slider');
-const thumbnailValue = document.getElementById('thumbnail-value');
+let settings = { ...DEFAULT_SETTINGS };
 
-const shortsToggle = document.getElementById('shorts-toggle');
-const titlesToggle = document.getElementById('titles-toggle');
-const radiusToggle = document.getElementById('radius-toggle');
+// ── Storage ───────────────────────────────────────────────────────────────
 
-let currentSettings = null;
+let saveTimer = null;
 
-function saveSettings(settings) {
+function writeNow() {
+  clearTimeout(saveTimer);
+  saveTimer = null;
   chrome.storage.sync.set({ [STORAGE_KEY]: settings }, () => {
     if (chrome.runtime.lastError) {
       console.error('[EasyTool] Storage write failed:', chrome.runtime.lastError.message);
@@ -65,139 +62,146 @@ function saveSettings(settings) {
   });
 }
 
-function updateSliderFill(slider) {
-  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+// Dragging a slider fires `input` on every step. Writing each one blows past
+// chrome.storage.sync's per-minute write quota, so coalesce them.
+function save({ immediate = false } = {}) {
+  if (immediate) {
+    writeNow();
+    return;
+  }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(writeNow, SAVE_DELAY);
+}
+
+// The popup can be dismissed mid-drag, so flush anything still pending.
+window.addEventListener('pagehide', () => {
+  if (saveTimer !== null) writeNow();
+});
+
+function sanitize(raw) {
+  const clean = { ...DEFAULT_SETTINGS, ...raw };
+  for (const [key, [min, max]] of Object.entries(LIMITS)) {
+    const n = Number(clean[key]);
+    clean[key] = Number.isFinite(n)
+            ? Math.min(max, Math.max(min, n))
+            : DEFAULT_SETTINGS[key];
+  }
+  return clean;
+}
+
+// ── Popup sizing ──────────────────────────────────────────────────────────
+
+// screen.width is already in CSS pixels. Multiplying it by devicePixelRatio
+// double-counts and drops HiDPI laptops onto the 4K branch, so use it as is.
+const baseScale = (() => {
+  const w = window.screen.width;
+  return w >= 3840 ? 1.33 : w >= 2560 ? 1.15 : 1;
+})();
+
+// Zoom the body, never the root element: a zoomed root does not report its
+// scaled size back to the browser, so the popup window keeps the unscaled
+// height and crops the bottom. Zooming a child grows the root normally.
+function fitPopup() {
+  const contentHeight = document.body.scrollHeight;
+  const scale = Math.min(baseScale, POPUP_MAX_HEIGHT / contentHeight);
+  const width = Math.ceil(BASE_WIDTH * scale) + 'px';
+
+  document.body.style.zoom = String(scale);
+  document.documentElement.style.width = width;
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────
+
+function setSlider(slider, valueNode, value, text) {
+  slider.value = value;
+  valueNode.textContent = text;
+  const pct = ((value - slider.min) / (slider.max - slider.min)) * 100;
   slider.style.setProperty('--fill', `${pct}%`);
 }
 
-function applyUIState(settings) {
-  // Main Grid switch & instant show/hide
-  gridToggle.checked = settings.gridEnabled;
-  if (gridControlsGroup) {
-    gridControlsGroup.classList.toggle('hidden', !settings.gridEnabled);
-  }
+function render() {
+  ui.gridToggle.checked = settings.gridEnabled;
+  ui.gridControls.classList.toggle('hidden', !settings.gridEnabled);
 
-  // Sliders and sub-toggles
-  columnSlider.value = settings.gridColumns;
-  columnValue.textContent = settings.gridColumns;
-  updateSliderFill(columnSlider);
+  setSlider(ui.columnSlider, ui.columnValue, settings.gridColumns, String(settings.gridColumns));
 
-  // Responsive Grid
-  responsiveGridToggle.checked = settings.responsiveGrid;
+  ui.responsiveGridToggle.checked = settings.responsiveGrid;
+  ui.autoMetadataToggle.checked = settings.autoMetadata;
 
-  // Auto Metadata
-  autoMetadataToggle.checked = settings.autoMetadata;
+  setSlider(ui.metadataSlider, ui.metadataValue, settings.metadataScale, settings.metadataScale + '%');
+  ui.metadataSection.classList.toggle('disabled', settings.autoMetadata);
+  ui.metadataSlider.disabled = settings.autoMetadata;
 
-  // Manual Metadata Slider
-  metadataSlider.value = settings.metadataScale;
-  metadataValue.textContent = settings.metadataScale + '%';
-  updateSliderFill(metadataSlider);
-  metadataSliderSection.classList.toggle('disabled', settings.autoMetadata);
-  metadataSlider.disabled = settings.autoMetadata;
+  // savedThumbnailSize is the user's real choice; sidebarThumbnailSize is what
+  // the content script applies and is parked at 100 while the grid is off.
+  setSlider(ui.thumbnailSlider, ui.thumbnailValue,
+          settings.savedThumbnailSize, settings.savedThumbnailSize + '%');
 
-  // Sidebar thumbnails
-  const displaySize = settings.savedThumbnailSize ?? settings.sidebarThumbnailSize;
-  thumbnailSlider.value = displaySize;
-  thumbnailValue.textContent = displaySize + '%';
-  updateSliderFill(thumbnailSlider);
+  ui.shortsToggle.checked = settings.hideShorts;
+  ui.titlesToggle.checked = settings.originalTitles;
+  ui.radiusToggle.checked = settings.removeBorderRadius;
 
-  // Other Toggles
-  shortsToggle.checked = settings.hideShorts;
-  titlesToggle.checked = settings.originalTitles;
-  radiusToggle.checked = settings.removeBorderRadius;
+  fitPopup();
 }
 
+// ── Wiring ────────────────────────────────────────────────────────────────
+
+function bindToggle(node, key, onChange) {
+  node.addEventListener('change', () => {
+    settings[key] = node.checked;
+    if (onChange) onChange();
+    save({ immediate: true });
+  });
+}
+
+function bindSlider(node, valueNode, key, format, onChange) {
+  const update = (immediate) => {
+    const value = Number(node.value);
+    settings[key] = value;
+    valueNode.textContent = format(value);
+    setSlider(node, valueNode, value, format(value));
+    if (onChange) onChange(value);
+    save({ immediate });
+  };
+
+  node.addEventListener('input', () => update(false));
+  node.addEventListener('change', () => update(true)); // fires on release
+}
+
+bindToggle(ui.gridToggle, 'gridEnabled', () => {
+  if (settings.gridEnabled) {
+    settings.sidebarThumbnailSize = settings.savedThumbnailSize;
+  } else {
+    settings.savedThumbnailSize = settings.sidebarThumbnailSize;
+    settings.sidebarThumbnailSize = 100; // 100 means "leave thumbnails alone"
+  }
+  render();
+});
+
+bindToggle(ui.responsiveGridToggle, 'responsiveGrid');
+bindToggle(ui.autoMetadataToggle, 'autoMetadata', render);
+bindToggle(ui.shortsToggle, 'hideShorts');
+bindToggle(ui.titlesToggle, 'originalTitles');
+bindToggle(ui.radiusToggle, 'removeBorderRadius');
+
+bindSlider(ui.columnSlider, ui.columnValue, 'gridColumns', String);
+bindSlider(ui.metadataSlider, ui.metadataValue, 'metadataScale', (v) => v + '%');
+bindSlider(ui.thumbnailSlider, ui.thumbnailValue, 'sidebarThumbnailSize', (v) => v + '%', (v) => {
+  settings.savedThumbnailSize = v;
+});
+
 // ── Initialization ────────────────────────────────────────────────────────
+
+ui.version.textContent = 'v' + chrome.runtime.getManifest().version;
 
 chrome.storage.sync.get(STORAGE_KEY, (result) => {
   if (chrome.runtime.lastError) {
     console.error('[EasyTool] Storage read failed:', chrome.runtime.lastError.message);
-    currentSettings = { ...DEFAULT_SETTINGS };
-    applyUIState(currentSettings);
-  } else {
-    currentSettings = Object.assign({}, DEFAULT_SETTINGS, result[STORAGE_KEY]);
-    applyUIState(currentSettings);
   }
+  settings = sanitize(result && result[STORAGE_KEY]);
+  render();
 
-  // Force synchronous reflow so checkboxes render in place instantly
-  void document.body.offsetHeight;
-
-  // Enable transitions on user interactions from this point forward
-  requestAnimationFrame(() => {
-    document.body.classList.add('interactive');
-  });
-});
-
-// ── Event listeners (Grid Toggle update) ──────────────────────────────────
-
-gridToggle.addEventListener('change', () => {
-  currentSettings.gridEnabled = gridToggle.checked;
-  if (!currentSettings.gridEnabled) {
-    currentSettings.savedThumbnailSize = currentSettings.sidebarThumbnailSize;
-    currentSettings.sidebarThumbnailSize = 100;
-  } else {
-    currentSettings.sidebarThumbnailSize = currentSettings.savedThumbnailSize;
-  }
-  saveSettings(currentSettings);
-  applyUIState(currentSettings, false); // pass false so the animation plays
-});
-
-columnSlider.addEventListener('input', () => {
-  let val = parseInt(columnSlider.value, 10);
-  if (isNaN(val)) val = DEFAULT_SETTINGS.gridColumns;
-  val = Math.max(MIN_COLUMNS, Math.min(MAX_COLUMNS, val));
-
-  currentSettings.gridColumns = val;
-  columnValue.textContent = val;
-  updateSliderFill(columnSlider);
-  saveSettings(currentSettings);
-});
-
-responsiveGridToggle.addEventListener('change', () => {
-  currentSettings.responsiveGrid = responsiveGridToggle.checked;
-  saveSettings(currentSettings);
-});
-
-autoMetadataToggle.addEventListener('change', () => {
-  currentSettings.autoMetadata = autoMetadataToggle.checked;
-  saveSettings(currentSettings);
-  applyUIState(currentSettings);
-});
-
-metadataSlider.addEventListener('input', () => {
-  let val = parseInt(metadataSlider.value, 10);
-  if (isNaN(val)) val = DEFAULT_SETTINGS.metadataScale;
-  val = Math.max(MIN_METADATA, Math.min(MAX_METADATA, val));
-
-  currentSettings.metadataScale = val;
-  metadataValue.textContent = val + '%';
-  updateSliderFill(metadataSlider);
-  saveSettings(currentSettings);
-});
-
-thumbnailSlider.addEventListener('input', () => {
-  let val = parseInt(thumbnailSlider.value, 10);
-  if (isNaN(val)) val = DEFAULT_SETTINGS.sidebarThumbnailSize;
-  val = Math.max(MIN_THUMBNAIL, Math.min(MAX_THUMBNAIL, val));
-
-  currentSettings.sidebarThumbnailSize = val;
-  currentSettings.savedThumbnailSize = val;
-  thumbnailValue.textContent = val + '%';
-  updateSliderFill(thumbnailSlider);
-  saveSettings(currentSettings);
-});
-
-shortsToggle.addEventListener('change', () => {
-  currentSettings.hideShorts = shortsToggle.checked;
-  saveSettings(currentSettings);
-});
-
-titlesToggle.addEventListener('change', () => {
-  currentSettings.originalTitles = titlesToggle.checked;
-  saveSettings(currentSettings);
-});
-
-radiusToggle.addEventListener('change', () => {
-  currentSettings.removeBorderRadius = radiusToggle.checked;
-  saveSettings(currentSettings);
+  // Transitions stay off until the stored state is painted, so the toggles
+  // do not visibly slide into position on open.
+  requestAnimationFrame(() => document.body.classList.add('interactive'));
 });

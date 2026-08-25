@@ -1,4 +1,4 @@
-/* YouTube EasyTool — Popup Styles */
+/* YouTube EasyTool Popup Styles */
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
 
@@ -13,7 +13,6 @@
 :root {
   --bg-primary: #0f0f0f;
   --bg-surface: #181818;
-  --bg-subtle: #212121;
   --border: #2c2c2c;
   --border-subtle: #222222;
   --text-primary: #f1f1f1;
@@ -24,14 +23,12 @@
   --track-empty: #333333;
   --disabled-opacity: 0.35;
   --radius: 8px;
-  --radius-sm: 4px;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     --bg-primary: #f6f6f6;
     --bg-surface: #ffffff;
-    --bg-subtle: #f9f9f9;
     --border: #e4e4e4;
     --border-subtle: #ebebeb;
     --text-primary: #111111;
@@ -44,22 +41,26 @@
 
 /* ── Base ────────────────────────────────────────────────────────────────── */
 
+/* popup.js overrides the html width when it zooms the body, and reads
+   BASE_WIDTH from this value. Keep the two in sync. */
 html {
   width: 280px;
-  min-width: 280px;
-  height: auto;
-  margin: 0;
-  padding: 0;
   background: var(--bg-primary);
+  overflow-x: hidden;
+  overflow-y: auto; /* Chrome caps popups at 600px tall: scroll, never crop */
+}
+
+html::-webkit-scrollbar {
+  width: 6px;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--toggle-off);
+  border-radius: 3px;
 }
 
 body {
   width: 280px;
-  min-width: 280px;
-  height: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
   line-height: 1.4;
@@ -67,8 +68,6 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   user-select: none;
-  overflow-x: hidden;
-  overflow-y: hidden;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
@@ -103,6 +102,7 @@ body {
 .version {
   font-size: 10px;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Features Container & Cards ─────────────────────────────────────────── */
@@ -127,7 +127,7 @@ body {
   margin: 0 10px;
 }
 
-/* ── Collapsible Card Content (Instant) ─────────────────────────────────── */
+/* ── Collapsible Card Content ───────────────────────────────────────────── */
 
 .card-content {
   display: flex;
@@ -137,7 +137,7 @@ body {
 }
 
 .card-content.hidden {
-  display: none !important;
+  display: none;
 }
 
 /* ── Feature Rows ───────────────────────────────────────────────────────── */
@@ -156,11 +156,6 @@ body {
   align-items: center;
   padding: 5px 10px 5px 18px;
   gap: 8px;
-}
-
-.sub-feature-row.disabled {
-  opacity: var(--disabled-opacity);
-  pointer-events: none;
 }
 
 .feature-info {
@@ -189,6 +184,12 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Shared inert state for any row or section a parent control switches off */
+.disabled {
+  opacity: var(--disabled-opacity);
+  pointer-events: none;
 }
 
 /* ── Compact Toggle Switch ──────────────────────────────────────────────── */
@@ -257,11 +258,6 @@ body {
   padding: 4px 10px 6px;
 }
 
-.slider-section.disabled {
-  opacity: var(--disabled-opacity);
-  pointer-events: none;
-}
-
 .slider-header {
   display: flex;
   justify-content: space-between;
@@ -278,7 +274,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Compact Range Input */
 input[type="range"] {
   --fill: 50%;
   -webkit-appearance: none;
@@ -326,7 +321,15 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-secondary);
 }
 
-/* ── Interactive Transitions (Active only after storage initialization) ─── */
+/* ── Keyboard Focus ─────────────────────────────────────────────────────── */
+
+.toggle input:focus-visible + .toggle-track,
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ── Interactive Transitions (active only after settings load) ──────────── */
 
 body.interactive .toggle-track {
   transition: background 0.2s ease;
@@ -336,7 +339,13 @@ body.interactive .toggle-track::after {
   transition: transform 0.2s ease;
 }
 
-body.interactive .sub-feature-row,
-body.interactive .slider-section {
+body.interactive .slider-section,
+body.interactive .sub-feature-row {
   transition: opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.interactive * {
+    transition: none !important;
+  }
 }
